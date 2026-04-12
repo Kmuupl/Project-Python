@@ -28,6 +28,6 @@ class Enemy:
         return f"{self.name} | HP: {self.hp} | Armor: {self.armor}"
 
     
-    def attack(self, player: Player) -> None:
+    def attack(self, player) -> None:
         player.hp -= self.damage
         print(f"{self.name} attacks! Your HP: {player.hp}")
