@@ -9,6 +9,7 @@ class Player:
             self.hp = 50
         elif difficulty == 2:
             self.hp = 20
+        self.difficulty = difficulty
     def __str__(self):
         return f"{self.name} | HP: {self.hp} | Dices: {self.dice}"
 
