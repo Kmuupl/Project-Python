@@ -12,6 +12,17 @@ class Player:
     def __str__(self):
         return f"{self.name} | HP: {self.hp} | Dices: {self.dice}"
 
+    def attack(self, enemy: Enemy) -> None:
+    roll = self.dice.roll()
+    total = sum(roll)
+    print(f"You rolled: {roll} = {total}")
+    if enemy.is_hit(total):
+        enemy.hp -= 10   # базовый урон игрока
+        print(f"Hit! {enemy.name} HP: {enemy.hp}")
+    else:
+        print(f"Miss! Armor blocked your attack.")
+
+
 def choose_difficulty() -> int:
     print(f"Okey, {name}. I remind you to choose difficulty.")
     print("0 - Easy (MAX HP)")
@@ -19,14 +30,12 @@ def choose_difficulty() -> int:
     print("2 - Harder Normal (20 HP)")
     while True:
         choice = input("Your choice (0/1/2): ").strip()
-        if coice in ("0", "1", "2"):
+        if choice in ("0", "1", "2"):
             return int(choice)
         print("Try Again :(")
 
-name = input("Please, write yout name: ")
 print(f"Hello, {name}!")
 
-difficulty = choose_difficulty()
 player = Player(name, difficulty)
 print(player)
 

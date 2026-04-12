@@ -17,7 +17,7 @@ class Enemy:
         elif name == "BOSS":
             self.hp = 80
             self.armor = 5
-            self.damage - 5
+            self.damage = 5
             self.reverse_armor = True
         self.damage = 2
     def is_hit(self, roll: int) -> bool:
@@ -27,9 +27,7 @@ class Enemy:
     def __str__(self):
         return f"{self.name} | HP: {self.hp} | Armor: {self.armor}"
 
-roll = sum(player.dice.roll())
-if enemy.is_hit(roll):
-    print(f"Hit! Dealt damage.")
-else:
-    print(f"Miss! Armor blocked.")
     
+    def attack(self, player: Player) -> None:
+        player.hp -= self.damage
+        print(f"{self.name} attacks! Your HP: {player.hp}")
