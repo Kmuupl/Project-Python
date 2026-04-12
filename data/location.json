@@ -1,0 +1,27 @@
+[
+    {
+        "name": "Dungeon",
+        "description": "Dark and cold...",
+        "enemy": "dungeon enemy"
+    },
+    {
+        "name": "Sewers",
+        "description": "It smells...",
+        "enemy": "sewers enemy"
+    },
+    {
+        "name": "Slums",
+        "description": "Ruins everywhere",
+        "enemy": "slums enemy"
+    },
+    {
+        "name": "Castle",
+        "description": "Cold stone walls",
+        "enemy": "castle enemy"
+    },
+    {
+        "name": "Throne",
+        "description": "The final room...",
+        "enemy": "BOSS"
+    }
+]

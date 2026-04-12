@@ -1,12 +1,15 @@
+import json
+from pathlib import Path
+from player import Player
+
 class Game:
     def __init__(self, player):
         self.player = player
+        data_path = Path("data/locations.json")
+        with open(data_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
         self.locations = [
-            ("Dungeon",  "Dark and cold...", "dungeon enemy"),
-            ("Sewers",   "It smells...",     "sewers enemy"),
-            ("Slums",    "Ruins everywhere", "slums enemy"),
-            ("Castle",   "Cold stone walls", "castle enemy"),
-            ("Throne",   "The final room",   "BOSS"), 
+            (loc["name"], loc["description"], loc["enemy_name"]) for loc in data
         ]
         self.current = 0
     def next_location(self):
