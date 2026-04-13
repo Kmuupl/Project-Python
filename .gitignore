@@ -3,6 +3,10 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+*.py[cod]
+data/save.json
+data/scores.json
+
 # C extensions
 *.so
 
