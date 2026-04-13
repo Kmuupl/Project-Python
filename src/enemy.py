@@ -1,3 +1,5 @@
+from src.player import slow_print
+
 class Enemy:
     def __init__(self, name: str):
         self.name = name
@@ -25,10 +27,10 @@ class Enemy:
         if self.reverse_armor:
             return roll <= self.armor
         return roll >= self.armor
+    
     def __str__(self):
         return f"{self.name} | HP: {self.hp} | Armor: {self.armor}"
 
-    
     def attack(self, player) -> None:
         player.hp -= self.damage
-        print(f"{self.name} attacks! Your HP: {player.hp}")
+        slow_print(f"{self.name} attacks! Your HP: {player.hp}")

@@ -30,5 +30,17 @@ Each battle is turn-based and requires player interaction.
 1. Clone the repository:
 git clone <your-repo-link>
 cd Project-Python
-2. Run the game:
+2. Create virtual environment
+python -m venv .venv
+.venv\Scripts\activate  (Windows)
+source .venv/bin/activate  (Linux/Mac)
+3. Install dependencies
+pip install -r requirements.txt
+4. Run the game:
 python main.py
+5. Run tests
+pytest tests/test_game.py -v
+
+## Requirements
+Python 3.10+
+pytest (for tests)

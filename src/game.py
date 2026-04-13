@@ -21,10 +21,12 @@ class Game:
         self.current = 0
 
     def next_location(self):
-        self.current += 1
-    
+        if self.current < len(self.locations) - 1:
+            self.current += 1
+
     def battle(self, enemy) -> bool:
-        if enemy.name == "BOSS":
+        is_boss = enemy.name == "BOSS"
+        if is_boss:
             slow_print("Something feels different..")
             time.sleep(1)
             slow_print("A terrifying presence fills the room..")
@@ -44,7 +46,7 @@ class Game:
 
             slow_print(f"{enemy.name} prepares to attack...")
             time.sleep(1)
-            slow_print(f"{enemy.name} whatches your every move...")
+            slow_print(f"{enemy.name} watches your every move...")
             time.sleep(0.7)
             enemy.attack(self.player)
             press_enter()
@@ -53,7 +55,7 @@ class Game:
 
         if enemy.hp <= 0:
             slow_print(f"You defeated the {enemy.name}!")
-            if enemy.name == "BOSS":
+            if is_boss:
                 slow_print("With the BOSS defeated, a sense of relief washes over you.")
             press_enter("Continue your adventure...")
             return True
@@ -80,15 +82,15 @@ class Game:
             if not self.battle(enemy):
                 self.save_score()
                 slow_print("Game Over. Your bones will tell the tale.")
-                break
+                return
 
             self.save_game()
             self.next_location()
-        else:
-            slow_print("Congratulations! You completed the game!")
-            self.save_score()
-            SAVE_FILE.unlink(missing_ok=True)
-            slow_print("Game cleared. Starting a new adventure...")
+
+        
+        slow_print("Congratulations! You completed the game!")
+        self.save_score()
+        SAVE_FILE.unlink(missing_ok=True)
 
     def save_game(self) -> None:
         data = {
