@@ -4,7 +4,7 @@ from pathlib import Path
 from datetime import date
 
 from src.enemy import Enemy
-from src.player import Player, slow_print, press_enter
+from src.player import slow_print, press_enter
 
 SAVE_FILE = Path("data/save.json")
 SCORE_FILE = Path("data/scores.json")
@@ -19,17 +19,19 @@ class Game:
             (loc["name"], loc["description"], loc["enemy"]) for loc in data
         ]
         self.current = 0
+
     def next_location(self):
-        if self.current < len(self.locations) - 1:
-            self.current += 1
-        return self.locations[self.current]
+        self.current += 1
     
     def battle(self, enemy) -> bool:
         if enemy.name == "BOSS":
+            slow_print("Something feels different..")
+            time.sleep(1)
             slow_print("A terrifying presence fills the room..")
-            time.sleep(0.5)
+            time.sleep(1)
             slow_print("The BOSS appears! Prepare for the final battle!")
             slow_print("Its armor is.. oddly weak. But its strength is immense.")
+            self.player.boss_mode = True
         else:
             slow_print(f"A {enemy.name} appears! Get ready to fight!")
         press_enter()
@@ -41,22 +43,24 @@ class Game:
                 break
 
             slow_print(f"{enemy.name} prepares to attack...")
-            time.sleep(0.5)
+            time.sleep(1)
             slow_print(f"{enemy.name} whatches your every move...")
-            time.sleep(0.4)
+            time.sleep(0.7)
             enemy.attack(self.player)
             press_enter()
 
-            if enemy.hp <= 0:
-                print(f"You defeated the {enemy.name}!")
-                if enemy.name == "BOSS":
-                    slow_print("With the BOSS defeated, a sense of relief washes over you.")
-                press_enter("Continue your adventure...")
-                return True
-            if self.player.hp <= 0:
-                slow_print("You have been defeated..")
-                slow_print("The world fades to black as you fall..")
-                return False
+        self.player.boss_mode = False
+
+        if enemy.hp <= 0:
+            slow_print(f"You defeated the {enemy.name}!")
+            if enemy.name == "BOSS":
+                slow_print("With the BOSS defeated, a sense of relief washes over you.")
+            press_enter("Continue your adventure...")
+            return True
+        if self.player.hp <= 0:
+            slow_print("You have been defeated..")
+            slow_print("The world fades to black as you fall..")
+            return False
             
     def run(self):
         if SAVE_FILE.exists():

@@ -2,6 +2,7 @@ class Enemy:
     def __init__(self, name: str):
         self.name = name
         self.reverse_armor = False
+        self.damage = 2
         if name == "dungeon enemy":
             self.hp = 5
             self.armor = 1
@@ -19,7 +20,7 @@ class Enemy:
             self.armor = 5
             self.damage = 5
             self.reverse_armor = True
-        self.damage = 2
+
     def is_hit(self, roll: int) -> bool:
         if self.reverse_armor:
             return roll <= self.armor

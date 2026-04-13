@@ -1,9 +1,10 @@
 import time
+import random
+import json
 from pathlib import Path
 from src import enemy
-from src.dice import Dice
 
-def slow_print(text:str, delay: float = 0.05) -> None:
+def slow_print(text:str, delay: float = 0.03) -> None:
     for char in text:
         print(char, end="", flush=True)
         time.sleep(delay)
@@ -15,7 +16,6 @@ def press_enter(msg: str = "Press Enter to continue...") -> None:
 class Player:
     def __init__(self, name: str, difficulty: int):
         self.inventory = []
-        self.dice = Dice(count = 10)
         self.name = name
         if difficulty == 0:
             self.hp = 100
@@ -24,9 +24,10 @@ class Player:
         elif difficulty == 2:
             self.hp = 20
         self.difficulty = difficulty
+        self.boss_mode = False
 
     def __str__(self):
-        return f"{self.name} | HP: {self.hp} | Dices: {self.dice}"
+        return f"{self.name} | HP: {self.hp}"
     
     def show_stats(self, enemy) -> None:
         slow_print(f"Your HP: {self.hp}")
@@ -64,22 +65,40 @@ class Player:
         slow_print("..You are feeling a souls of your dice..")
         time.sleep(0.5)
         press_enter()
-        roll = self.dice.roll()
-        total = sum(roll)
+        roll = random.randint(1, 6)
         slow_print(f"You rolled: {roll}")
-        slow_print(f"Total: {total}")
         time.sleep(0.5)
-        if enemy.is_hit(total):
-            enemy.hp -= 10
-            messages = [
-                f"The impact echoes through the chamber... {enemy.name} reels, barely holding its ground.",
-                f"Your strike lands with brutal precision — {enemy.name} lets out a distorted cry.",
-                f"The dice obey your will... the blow tears into {enemy.name}'s defenses.",
-                f"A solid hit. {enemy.name} stumbles, something inside it breaking.",
-                f"You push through the armor — {enemy.name} shudders under the force."
-            ]
-            import random
-            slow_print(random.choice(messages))
+
+        if self.boss_mode:
+            is_crit = roll == 1
+            if is_crit:
+                slow_print("Critical hit! The dice favor you with a perfect strike!")
+        else:
+            is_crit = roll == 6
+            if is_crit:
+                slow_print("Critical hit! The dice favor you with a perfect strike!")
+        damage = 20 if is_crit else 10
+
+        if enemy.is_hit(roll):
+            enemy.hp -= damage
+            if is_crit:
+                crits = [
+                    f"Your critical strike shatters {enemy.name}'s defenses, leaving it vulnerable.",
+                    f"The dice align in your favor, delivering a devastating blow to {enemy.name}.",
+                    f"With a surge of power, your critical hit sends {enemy.name} reeling.",
+                    f"The critical strike pierces through {enemy.name}'s armor, causing massive damage.",
+                    f"Your perfect roll unleashes a powerful attack, severely wounding {enemy.name}."
+                ]
+                slow_print(random.choice(crits))
+            else:
+                messages = [
+                    f"The impact echoes through the chamber... {enemy.name} reels, barely holding its ground.",
+                    f"Your strike lands with brutal precision — {enemy.name} lets out a distorted cry.",
+                    f"The dice obey your will... the blow tears into {enemy.name}'s defenses.",
+                    f"A solid hit. {enemy.name} stumbles, something inside it breaking.",
+                    f"You push through the armor — {enemy.name} shudders under the force."
+                ]
+                slow_print(random.choice(messages))
             slow_print(f"{enemy.name} HP: {enemy.hp}")
         else:
             misses = [
@@ -89,7 +108,6 @@ class Player:
                 f"{enemy.name} laughs at your feeble attempt, shrugging off the attack.",
                 f"Your blow glances off {enemy.name}'s defenses, leaving you vulnerable."
             ]
-            import random
             slow_print(random.choice(misses))
 
 def choose_difficulty(name: str) -> int:
