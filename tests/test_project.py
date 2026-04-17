@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.enemy import Enemy
+from src.enemy import Enemy, Boss
 from src.player import Player, BASE_DAMAGE, CRIT_DAMAGE
 from src.dice import Dice
 
@@ -14,7 +14,6 @@ class TestEnemy:
         assert e.hp == 5
         assert e.armor == 1
         assert e.damage == 2
-        assert e.reverse_armor is False
     
     def test_sewers_enemy_stats(self):
         e = Enemy("sewers enemy")
@@ -32,11 +31,10 @@ class TestEnemy:
         assert e.armor == 4
 
     def test_boss_stats(self):
-        e = Enemy("BOSS")
+        e = Boss()
         assert e.hp == 80
         assert e.armor == 5
         assert e.damage == 5
-        assert e.reverse_armor is True
 
     def test_armor_hit(self):
         e = Enemy("dungeon enemy")
@@ -54,7 +52,7 @@ class TestEnemy:
         assert e.is_hit(3) is False
     
     def test_reverse_armor_hit(self):
-        e = Enemy("BOSS")
+        e = Boss()
         assert e.is_hit(1) is True
         assert e.is_hit(2) is True
         assert e.is_hit(3) is True
@@ -63,7 +61,7 @@ class TestEnemy:
         assert e.is_hit(6) is False
 
     def test_reverse_armor_miss(self):
-        e = Enemy("BOSS")
+        e = Boss()
         assert e.is_hit(6) is False
 
     def test_enemy_attack(self):
@@ -74,7 +72,7 @@ class TestEnemy:
 
     def test_boss_attack(self):
         player = Player("TestPlayer", 0)
-        e = Enemy("BOSS")
+        e = Boss()
         e.attack(player)
         assert player.hp == 95
 

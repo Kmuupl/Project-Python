@@ -2,30 +2,48 @@ import json
 import time
 from pathlib import Path
 from datetime import date
-
 from src.enemy import Enemy
+from src.location import Location
 from src.player import slow_print, press_enter
 
 SAVE_FILE = Path("data/save.json")
 SCORE_FILE = Path("data/scores.json")
 
 class Game:
+    """Main game controller. Manages locations, battles, saving and loading."""
     def __init__(self, player):
         self.player = player
-        data_path = Path("data/location.json")
-        with open(data_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        self.locations = [
-            (loc["name"], loc["description"], loc["enemy"]) for loc in data
-        ]
+        self.locations = self._load_locations()
         self.current = 0
 
+    def _load_locations(self) -> list[Location]:
+        """Load locations from JSON file. Raises SystemExit if file is missing or corrupt."""
+        data_path = Path("data/location.json")
+        try:
+            with open(data_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except FileNotFoundError:
+            slow_print(f"Locations data file not found at {data_path}. Exiting.")
+            raise SystemExit(1)
+        except json.JSONDecodeError:
+            slow_print(f"Error decoding locations data file at {data_path}. Exiting.")
+            raise SystemExit(1)
+        return [
+            Location(
+                name = loc.get("name", "Unknown"),
+                description = loc.get("description", ""),
+                enemy = loc.get("enemy", "")
+            ) for loc in data
+        ]
+
     def next_location(self):
+        """Advance to the next location if available."""
         if self.current < len(self.locations) - 1:
             self.current += 1
 
     def battle(self, enemy) -> bool:
-        is_boss = enemy.name == "BOSS"
+        """Run a turn-based battle loop. Returns True if player wins, False if defeated."""
+        is_boss = isinstance(enemy, Boss)
         if is_boss:
             slow_print("Something feels different..")
             time.sleep(1)
@@ -38,11 +56,12 @@ class Game:
             slow_print(f"A {enemy.name} appears! Get ready to fight!")
         press_enter()
 
-        while self.player.hp > 0 and enemy.hp > 0:
-            self.player.take_turn(enemy)
+        try:
+            while self.player.hp > 0 and enemy.hp > 0:
+                self.player.take_turn(enemy)
 
-            if enemy.hp <= 0:
-                break
+                if enemy.hp <= 0:
+                    break
 
             slow_print(f"{enemy.name} prepares to attack...")
             time.sleep(1)
@@ -50,8 +69,8 @@ class Game:
             time.sleep(0.7)
             enemy.attack(self.player)
             press_enter()
-
-        self.player.boss_mode = False
+        finally:
+            self.player.boss_mode = False
 
         if enemy.hp <= 0:
             slow_print(f"You defeated the {enemy.name}!")
@@ -65,6 +84,7 @@ class Game:
             return False
             
     def run(self):
+        """Main game loop. Runs through all locations until player wins or is defeated."""
         if SAVE_FILE.exists():
             choice = input("Load saved game? (y/n): ").strip().lower()
             if choice == "y":
@@ -72,13 +92,15 @@ class Game:
                     slow_print("Game loaded. Resuming...")
                 else:
                     slow_print("Starting new game.")
+
         while self.current < len(self.locations):
-            location, description, enemy_name = self.locations[self.current]
-            slow_print(f"You enter the {location}.")
-            slow_print(f"{description}")
+            loc = self.locations[self.current]
+            slow_print(f"You enter the {loc.name}.")
+
+            slow_print(loc.description)
             press_enter()
 
-            enemy = Enemy(enemy_name)
+            enemy = Boss() if loc.enemy == Boss.NAME else Enemy(loc.enemy)
             if not self.battle(enemy):
                 self.save_score()
                 slow_print("Game Over. Your bones will tell the tale.")
@@ -87,12 +109,12 @@ class Game:
             self.save_game()
             self.next_location()
 
-        
         slow_print("Congratulations! You completed the game!")
         self.save_score()
         SAVE_FILE.unlink(missing_ok=True)
 
     def save_game(self) -> None:
+        """Save current game state to JSON file."""
         data = {
             "name": self.player.name,
             "difficulty": self.player.difficulty,
@@ -106,6 +128,7 @@ class Game:
         slow_print("Game saved successfully.")
 
     def load_game(self) -> bool:
+        """Load game state from save file. Returns True if successful."""
         try:
             with open(SAVE_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -120,7 +143,9 @@ class Game:
             return False
         
     def save_score(self) -> None:
-        location_name = self.locations[self.current][0]
+        """Append current run result to scores file."""
+
+        location_name = self.locations[self.current].name
         score_entry = {
             "name": self.player.name,
             "difficulty": self.player.difficulty,
