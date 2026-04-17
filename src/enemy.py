@@ -1,5 +1,5 @@
 from __future__ import annotations
-from src.player import slow_print
+from src.utils import slow_print
 
 ENEMY_DATA = {
     "dungeon enemy": {"hp": 5, "armor": 1, "damage": 2},

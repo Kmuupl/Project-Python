@@ -3,25 +3,11 @@ import random
 import json
 from pathlib import Path
 from src.dice import Dice
+from src.item import StarOfLuck
+from src.utils import slow_print, press_enter, safe_input
 
 BASE_DAMAGE = 10
 CRIT_DAMAGE = 20
-
-def slow_print(text:str, delay: float = 0.03) -> None:
-    for char in text:
-        print(char, end="", flush=True)
-        time.sleep(delay)
-    print()
-
-def press_enter(msg: str = "Press Enter to continue...") -> None:
-    input(msg)
-
-def safe_input(prompt: str, valid_options: list) -> str:
-    while True:
-        choice = input(prompt).strip()
-        if choice in valid_options:
-            return choice
-        slow_print("Sorry, nope. Please try again.")
 
 class Player:
     def __init__(self, name: str, difficulty: int):
@@ -36,6 +22,9 @@ class Player:
             self.hp = 50
         elif difficulty == 2:
             self.hp = 20
+        self.max_hp = self.hp
+        self.stars: int = 0
+        self.star_bonus_active: bool = False
 
     def __str__(self):
         return f"{self.name} | HP: {self.hp} | Difficulty: {self.difficulty} | Dice count: {self.dice.count}"
@@ -62,7 +51,8 @@ class Player:
             slow_print("[1] - Roll dice to attack")
             slow_print("[2] - Skip turn")
             slow_print("[3] - Info")
-            choice = safe_input("Your choice: ", ["1", "2", "3"])
+            slow_print("[4] - Inventory")
+            choice = safe_input("Your choice: ", ["1", "2", "3", "4"])
             if choice == "1":
                 time.sleep(0.5)
                 self.roll_attack(enemy)
@@ -73,17 +63,36 @@ class Player:
             elif choice == "3":
                 time.sleep(0.5)
                 self.show_stats(enemy)
+            elif choice == "4":
+                time.sleep(0.5)
+                self._use_item_menu()
+
+    def _use_item_menu(self) -> None:
+        if not self.inventory:
+            slow_print("Yout inventory is empty :( . )")
+            return
+        slow_print("Inventory:")
+        for i, item in enumerate(self.inventory):
+            slow_print(f" [{i}] {item}")
+        slow_print(" [c] Cancel")
+        valid = [str(i) for i in range(len(self.inventory))] + ["c"]
+        choice = safe_input("Choose item: ", valid)
+        if choice == "c":
+            return
+        item = self.inventory.pop(int(choice))
+        item.use(self)
 
     def roll_attack(self, enemy) -> None:
         slow_print("..You are feeling a souls of your dice..")
         time.sleep(0.5)
         press_enter()
-        roll = self.dice.roll_dice()
+        crit_target = 1 if self.boss_mode else 6
+        bonus = StarOfLuck.BONUS if self.star_bonus_active else 0.0
+        self.star_bonus_active = False 
+        roll = self.dice.roll_dice(crit_turget=crit_target, star_bonus=bonus)
         slow_print(f"You rolled: {roll}")
         time.sleep(0.5)
-
-        crit_value = 1 if self.boss_mode else 6
-        is_crit = roll == crit_value
+        is_crit = roll == crit_target
 
         if is_crit:
             if self.boss_mode:

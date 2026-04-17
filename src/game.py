@@ -4,7 +4,9 @@ from pathlib import Path
 from datetime import date
 from src.enemy import Enemy
 from src.location import Location
-from src.player import slow_print, press_enter
+from src.utils import slow_print, press_enter
+from src.loot import LootTable
+from src.item import StarOfLuck
 
 SAVE_FILE = Path("data/save.json")
 SCORE_FILE = Path("data/scores.json")
@@ -15,6 +17,7 @@ class Game:
         self.player = player
         self.locations = self._load_locations()
         self.current = 0
+        self.loot_table = LootTable()
 
     def _load_locations(self) -> list[Location]:
         """Load locations from JSON file. Raises SystemExit if file is missing or corrupt."""
@@ -82,6 +85,13 @@ class Game:
             slow_print("You have been defeated..")
             slow_print("The world fades to black as you fall..")
             return False
+        
+    def _handle_loot(self) -> None:
+        dropped = self.loot_table.roll()
+        for item in dropped:
+            self.player.inventory.append(item)
+            slow_print(f"You found: {item.name}. {item.description}")
+            item.on_pickup(self.player)
             
     def run(self):
         """Main game loop. Runs through all locations until player wins or is defeated."""
@@ -105,7 +115,8 @@ class Game:
                 self.save_score()
                 slow_print("Game Over. Your bones will tell the tale.")
                 return
-
+            
+            self._handle_loot()
             self.save_game()
             self.next_location()
 
@@ -121,7 +132,7 @@ class Game:
             "current_location": self.current,
             "date": str(date.today()),
             "hp": self.player.hp,
-            "inventory": self.player.inventory,
+            "inventory": [item.name for item in self.player.inventory],
         }
         with open(SAVE_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
