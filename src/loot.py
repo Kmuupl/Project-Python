@@ -1,10 +1,10 @@
 from __future__ import annotations
 import random
-from src.item import Item, HealthPotion, StarfLuck
+from src.item import Item, HealthPotion, StarOfLuck
 
 LOOT_TABLE: list[tuple[type[Item], float]] = [
     (HealthPotion, 0.5),
-    (StarfLuck, 0.3),
+    (StarOfLuck, 0.3),
 ]
 
 class LootTable:

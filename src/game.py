@@ -7,6 +7,7 @@ from src.location import Location
 from src.utils import slow_print, press_enter
 from src.loot import LootTable
 from src.item import StarOfLuck
+from src.map import Map, TILE_DESCRIPTION
 
 SAVE_FILE = Path("data/save.json")
 SCORE_FILE = Path("data/scores.json")
@@ -18,6 +19,34 @@ class Game:
         self.locations = self._load_locations()
         self.current = 0
         self.loot_table = LootTable()
+        self.player_x: int = 0
+        self.player_y: int = 0
+        self.map = Map()
+
+    def exploration(self) -> None:
+        slow_print("Use WASD to move.")
+        press_enter()
+
+        while True:
+            self.map.render(self.player_x, self.player_y)
+            tile = self.map.get_tile(self.player_x, self.player_y)
+            desc = TILE_DESCRIPTION.get(tile, "")
+            if desc:
+                slow_print(f"   {desc}")
+            direction = input(" Move (wasd): ").strip().lower()
+            if direction not in ("w", "a", "s", "d"):
+                slow_print("Nope")
+                continue
+            self.player_x, self.player_y = self.map.move(
+                self.player_x, self.player_y, direction
+            )
+            new_tile = self.map.get_tile(self.player_x, self.player_y)
+            if new_tile == "B":
+                self.map.render(self.player_x, self.player_y)
+                slow_print("Prepare for battle..")
+                press_enter()
+                break
+                
 
     def _load_locations(self) -> list[Location]:
         """Load locations from JSON file. Raises SystemExit if file is missing or corrupt."""
@@ -94,35 +123,37 @@ class Game:
             item.on_pickup(self.player)
             
     def run(self):
-        """Main game loop. Runs through all locations until player wins or is defeated."""
-        if SAVE_FILE.exists():
-            choice = input("Load saved game? (y/n): ").strip().lower()
-            if choice == "y":
-                if self.load_game():
-                    slow_print("Game loaded. Resuming...")
-                else:
-                    slow_print("Starting new game.")
+        self.exploration()
 
-        while self.current < len(self.locations):
-            loc = self.locations[self.current]
-            slow_print(f"You enter the {loc.name}.")
+        # """Main game loop. Runs through all locations until player wins or is defeated."""
+        # if SAVE_FILE.exists():
+        #     choice = input("Load saved game? (y/n): ").strip().lower()
+        #     if choice == "y":
+        #         if self.load_game():
+        #             slow_print("Game loaded. Resuming...")
+        #         else:
+        #             slow_print("Starting new game.")
 
-            slow_print(loc.description)
-            press_enter()
+        # while self.current < len(self.locations):
+        #     loc = self.locations[self.current]
+        #     slow_print(f"You enter the {loc.name}.")
 
-            enemy = Boss() if loc.enemy == Boss.NAME else Enemy(loc.enemy)
-            if not self.battle(enemy):
-                self.save_score()
-                slow_print("Game Over. Your bones will tell the tale.")
-                return
+        #     slow_print(loc.description)
+        #     press_enter()
+
+        #     enemy = Boss() if loc.enemy == Boss.NAME else Enemy(loc.enemy)
+        #     if not self.battle(enemy):
+        #         self.save_score()
+        #         slow_print("Game Over. Your bones will tell the tale.")
+        #         return
             
-            self._handle_loot()
-            self.save_game()
-            self.next_location()
+        #     self._handle_loot()
+        #     self.save_game()
+        #     self.next_location()
 
-        slow_print("Congratulations! You completed the game!")
-        self.save_score()
-        SAVE_FILE.unlink(missing_ok=True)
+        # slow_print("Congratulations! You completed the game!")
+        # self.save_score()
+        # SAVE_FILE.unlink(missing_ok=True)
 
     def save_game(self) -> None:
         """Save current game state to JSON file."""
