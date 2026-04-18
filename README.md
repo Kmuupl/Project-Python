@@ -1,18 +1,19 @@
 # Text RPG Dice Game
 ## Description
-This is a console-based text RPG game written in Python.
-The player progresses through several locations, fighting enemies using a dice-based combat system.  
-Each battle is turn-based and requires player interaction.
+A console-based turn-based RPG written in Python.
+The player explores dungeons, fights enemies using a dice-based combat system,
+collects loot and faces a final boss.
 
 ## Features
-- Turn-based combat system
-- Dice-based attack mechanics
-- Critical hits (normal and inverted for boss)
-- Unique boss fight with inverted rules
-- Multiple locations loaded from JSON file
+- Grid-based dungeon exploration (WASD movement, no Enter needed)
+- Fog of war — only visited areas are revealed
+- Turn-based dice combat with critical hits
+- Items: Health Potions and Stars of Luck
+- Star mechanic: increases crit chance via weighted random
+- Boss fight with inverted armor rules
 - Save / load system
 - Score saving to JSON
-- Atmospheric text output (delays, immersive messages)
+- Multiple difficulty levels
 
 ## Game Mechanics
 ### Normal enemies:
@@ -25,6 +26,10 @@ Each battle is turn-based and requires player interaction.
 - Lower values are better
 - Critical hit on **1**
 - Player must adapt strategy
+
+### Items
+- **Health Potion** — restores 20 HP, capped at max HP
+- **Star of Luck** — use before attack to increase crit chance by 10%
 
 ## How to run
 1. Clone the repository:
@@ -43,4 +48,5 @@ pytest tests/test_game.py -v
 
 ## Requirements
 Python 3.10+
-pytest (for tests)
+pytest
+pytest-cov(for tests)

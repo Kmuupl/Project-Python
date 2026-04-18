@@ -9,7 +9,13 @@ LOOT_TABLE: list[tuple[type[Item], float]] = [
 
 class LootTable:
     """Handles random item drops after battles. Game doesn't know what items exist."""
+
     def roll(self) -> list[Item]:
+        """Roll for dropped items based on LOOT_TABLE chances.
+        
+        Each item drops independently. Returns empty list if nothing drops.
+        """
+
         dropped = []
         for item_class, chance in LOOT_TABLE:
             if random.random() < chance:

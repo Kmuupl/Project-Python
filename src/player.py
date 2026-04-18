@@ -11,6 +11,8 @@ BASE_DAMAGE = 10
 CRIT_DAMAGE = 20
 
 class Player:
+    """Represents the player character with HP, inventory and combat actions."""
+
     def __init__(self, name: str, difficulty: int):
         self.inventory = []
         self.dice = Dice(50)
@@ -28,9 +30,13 @@ class Player:
         self.star_bonus_active: bool = False
 
     def __str__(self):
+        """Return readable player summary."""
+
         return f"{self.name} | HP: {self.hp} | Difficulty: {self.difficulty} | Dice count: {self.dice.count}"
     
     def show_stats(self, enemy) -> None:
+        """Display current HP, enemy stats and combat hints."""
+
         slow_print(f"Your HP: {self.hp}")
         slow_print(f"Enemy name: {enemy.name} HP: {enemy.hp} Armor: {enemy.armor}")
         if isinstance(enemy, Boss):
@@ -44,6 +50,8 @@ class Player:
             slow_print("Rolling a 6 will result in a critical hit.")
 
     def take_turn(self, enemy) -> None:
+        """Handle player's turn: show menu and execute chosen action."""
+
         slow_print(f"Your turn, {self.name}")
         self.show_stats(enemy)
         while True:
@@ -69,6 +77,8 @@ class Player:
                 self._use_item_menu()
 
     def _use_item_menu(self) -> None:
+        """Show inventory and let player choose an item to use."""
+
         if not self.inventory:
             slow_print("Yout inventory is empty :( . )")
             return
@@ -84,6 +94,8 @@ class Player:
         item.use(self)
 
     def roll_attack(self, enemy) -> None:
+        """Roll dice with optional star bias and apply damage to enemy if hit."""
+        
         slow_print("..You are feeling a souls of your dice..")
         time.sleep(0.5)
         press_enter()
