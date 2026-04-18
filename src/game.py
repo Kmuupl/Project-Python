@@ -2,12 +2,12 @@ import json
 import time
 from pathlib import Path
 from datetime import date
-from src.enemy import Enemy
+from src.enemy import Enemy, Boss
 from src.location import Location
 from src.utils import slow_print, press_enter
 from src.loot import LootTable
 from src.item import StarOfLuck
-from src.map import Map, TILE_DESCRIPTION
+from src.map import Map, TILE_DESCRIPTION, clear_screen
 
 SAVE_FILE = Path("data/save.json")
 SCORE_FILE = Path("data/scores.json")
@@ -19,35 +19,44 @@ class Game:
         self.locations = self._load_locations()
         self.current = 0
         self.loot_table = LootTable()
-        self.player_x: int = 0
-        self.player_y: int = 0
         self.map = Map()
+        self.player_x, self.player_y = self.map.find_start()
 
     def exploration(self) -> None:
+        from src.map import get_key, clear_screen
+        clear_screen()
         slow_print("Use WASD to move.")
-        press_enter()
+        time.sleep(1.5)
+
+        self.map.reveal(self.player_x, self.player_y)
 
         while True:
-            self.map.render(self.player_x, self.player_y)
-            tile = self.map.get_tile(self.player_x, self.player_y)
-            desc = TILE_DESCRIPTION.get(tile, "")
-            if desc:
-                slow_print(f"   {desc}")
-            direction = input(" Move (wasd): ").strip().lower()
-            if direction not in ("w", "a", "s", "d"):
-                slow_print("Nope")
-                continue
-            self.player_x, self.player_y = self.map.move(
-                self.player_x, self.player_y, direction
-            )
-            new_tile = self.map.get_tile(self.player_x, self.player_y)
-            if new_tile == "B":
-                self.map.render(self.player_x, self.player_y)
-                slow_print("Prepare for battle..")
-                press_enter()
+            self.map.render(self.player_x, self.player_y, self.player.hp, self.player.stars)
+            key = get_key()
+            if key == "q":
+                slow_print("    Exit")
                 break
-                
+            if key not in ("w", "a", "s", "d"):
+                continue
+            new_x, new_y = self.map.move(self.player_x, self.player_y, key)
+            self.player_x, self.player_y = new_x, new_y
 
+            self.map.reveal(self.player_x, self.player_y)
+            time.sleep(0.05)
+            tile = self.map.get_tile(self.player_x, self.player_y)
+            if tile == "B":
+                self.map.render(
+                    self.player_x,
+                    self.player_y,
+                    self.player.hp,
+                    self.player.stars,
+                )
+                slow_print("A dark presence fills the room..")
+                time.sleep(1)
+                slow_print("Prepare for battle.")
+                time.sleep(0.8)
+                return
+                
     def _load_locations(self) -> list[Location]:
         """Load locations from JSON file. Raises SystemExit if file is missing or corrupt."""
         data_path = Path("data/location.json")
@@ -70,8 +79,7 @@ class Game:
 
     def next_location(self):
         """Advance to the next location if available."""
-        if self.current < len(self.locations) - 1:
-            self.current += 1
+        self.current += 1
 
     def battle(self, enemy) -> bool:
         """Run a turn-based battle loop. Returns True if player wins, False if defeated."""
@@ -95,12 +103,12 @@ class Game:
                 if enemy.hp <= 0:
                     break
 
-            slow_print(f"{enemy.name} prepares to attack...")
-            time.sleep(1)
-            slow_print(f"{enemy.name} watches your every move...")
-            time.sleep(0.7)
-            enemy.attack(self.player)
-            press_enter()
+                slow_print(f"{enemy.name} prepares to attack...")
+                time.sleep(1)
+                slow_print(f"{enemy.name} watches your every move...")
+                time.sleep(0.7)
+                enemy.attack(self.player)
+                press_enter()
         finally:
             self.player.boss_mode = False
 
@@ -123,37 +131,39 @@ class Game:
             item.on_pickup(self.player)
             
     def run(self):
-        self.exploration()
+        """Main game loop. Runs through all locations until player wins or is defeated."""
+        if SAVE_FILE.exists():
+            choice = input("Load saved game? (y/n): ").strip().lower()
+            if choice == "y":
+                if self.load_game():
+                    slow_print("Game loaded. Resuming...")
+                else:
+                    slow_print("Starting new game.")
 
-        # """Main game loop. Runs through all locations until player wins or is defeated."""
-        # if SAVE_FILE.exists():
-        #     choice = input("Load saved game? (y/n): ").strip().lower()
-        #     if choice == "y":
-        #         if self.load_game():
-        #             slow_print("Game loaded. Resuming...")
-        #         else:
-        #             slow_print("Starting new game.")
+        while self.current < len(self.locations):
+            clear_screen()
+            loc = self.locations[self.current]
+            self.map = Map()
+            self.player_x, self.player_y = self.map.find_start()
+            slow_print(f"You enter the {loc.name}.")
 
-        # while self.current < len(self.locations):
-        #     loc = self.locations[self.current]
-        #     slow_print(f"You enter the {loc.name}.")
+            slow_print(loc.description)
+            press_enter()
+            self.exploration()
 
-        #     slow_print(loc.description)
-        #     press_enter()
-
-        #     enemy = Boss() if loc.enemy == Boss.NAME else Enemy(loc.enemy)
-        #     if not self.battle(enemy):
-        #         self.save_score()
-        #         slow_print("Game Over. Your bones will tell the tale.")
-        #         return
+            enemy = Boss() if loc.enemy == Boss.NAME else Enemy(loc.enemy)
+            if not self.battle(enemy):
+                self.save_score()
+                slow_print("Game Over. Your bones will tell the tale.")
+                return
             
-        #     self._handle_loot()
-        #     self.save_game()
-        #     self.next_location()
+            self._handle_loot()
+            self.save_game()
+            self.next_location()
 
-        # slow_print("Congratulations! You completed the game!")
-        # self.save_score()
-        # SAVE_FILE.unlink(missing_ok=True)
+        slow_print("Congratulations! You completed the game!")
+        self.save_score()
+        SAVE_FILE.unlink(missing_ok=True)
 
     def save_game(self) -> None:
         """Save current game state to JSON file."""
@@ -187,7 +197,8 @@ class Game:
     def save_score(self) -> None:
         """Append current run result to scores file."""
 
-        location_name = self.locations[self.current].name
+        index = min(self.current, len(self.locations) - 1)
+        location_name = self.locations[index].name
         score_entry = {
             "name": self.player.name,
             "difficulty": self.player.difficulty,

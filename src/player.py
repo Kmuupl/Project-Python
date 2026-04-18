@@ -5,6 +5,7 @@ from pathlib import Path
 from src.dice import Dice
 from src.item import StarOfLuck
 from src.utils import slow_print, press_enter, safe_input
+from src.enemy import Boss
 
 BASE_DAMAGE = 10
 CRIT_DAMAGE = 20
@@ -32,8 +33,8 @@ class Player:
     def show_stats(self, enemy) -> None:
         slow_print(f"Your HP: {self.hp}")
         slow_print(f"Enemy name: {enemy.name} HP: {enemy.hp} Armor: {enemy.armor}")
-        if enemy.reverse_armor:
-            slow_print(f"This enemy has reverse armor! You need to roll less than or equal to {enemy.armor} to hit.")
+        if isinstance(enemy, Boss):
+            slow_print(f"This is the BOSS! Roll less than or equal to {enemy.armor} to hit.")
         else:
             slow_print(f"Roll greater than or equal to {enemy.armor} to hit.")
 
@@ -89,7 +90,7 @@ class Player:
         crit_target = 1 if self.boss_mode else 6
         bonus = StarOfLuck.BONUS if self.star_bonus_active else 0.0
         self.star_bonus_active = False 
-        roll = self.dice.roll_dice(crit_turget=crit_target, star_bonus=bonus)
+        roll = self.dice.roll_dice(crit_target=crit_target, star_bonus=bonus)
         slow_print(f"You rolled: {roll}")
         time.sleep(0.5)
         is_crit = roll == crit_target
